@@ -1,5 +1,3 @@
-2. NBGameMode.cpp 전체 교체
-
 #include "NBGameMode.h"
 #include "NBPlayerState.h"
 #include "NBPlayerController.h"
@@ -19,7 +17,7 @@ void ANBGameMode::BeginPlay()
 
 	GenerateRandomNumbers();
 
-	// 테스트용: 서버 Output Log에 정답 출력
+	// Test: Print the answer to the server Output Log
 	UE_LOG(
 		LogTemp,
 		Warning,
@@ -59,7 +57,7 @@ bool ANBGameMode::ValidateInput(
 {
 	if (Input.Len() != 3)
 	{
-		ErrorMessage = TEXT("3자리 숫자를 입력해주세요.");
+		ErrorMessage = TEXT("Please enter a 3-digit number.");
 		return false;
 	}
 
@@ -69,7 +67,7 @@ bool ANBGameMode::ValidateInput(
 			Character > TEXT('9'))
 		{
 			ErrorMessage =
-				TEXT("1~9 사이의 숫자를 입력해주세요.");
+				TEXT("Please enter digits between 1 and 9.");
 			return false;
 		}
 	}
@@ -79,7 +77,7 @@ bool ANBGameMode::ValidateInput(
 		Input[1] == Input[2])
 	{
 		ErrorMessage =
-			TEXT("중복되지 않은 숫자를 입력해주세요.");
+			TEXT("Please enter three different digits.");
 		return false;
 	}
 
@@ -159,49 +157,49 @@ void ANBGameMode::ProcessGuess(
 		return;
 	}
 
-	// 기회를 모두 사용한 플레이어는 추가 입력 불가
+	// Prevent players from guessing after using all attempts
 	if (NBState->GetCurrentAttempts() >=
 		NBState->GetMaxAttempts())
 	{
 		GuessingController->ClientReceiveResult(
-			TEXT("기회를 모두 사용했습니다.")
+			TEXT("You have used all your attempts.")
 		);
 		return;
 	}
 
 	FString Result;
 
-	// 잘못된 입력이면 기회를 소모하지 않음
+	// Invalid input does not consume an attempt
 	if (!CheckAnswer(Guess, Result))
 	{
 		GuessingController->ClientReceiveResult(Result);
 		return;
 	}
 
-	// 유효한 입력만 기회 소모
+	// Only valid input consumes an attempt
 	NBState->AddAttempt();
 
 	Result = FString::Printf(
-		TEXT("%s (시도: %d/%d)"),
+		TEXT("%s (Attempts: %d/%d)"),
 		*Result,
 		NBState->GetCurrentAttempts(),
 		NBState->GetMaxAttempts()
 	);
 
-	// 먼저 입력한 플레이어에게 판정 결과 표시
+	// Display the result to the player who submitted the guess
 	GuessingController->ClientReceiveResult(Result);
 
-	// 3S면 즉시 승리
+	// Three strikes means an immediate win
 	if (Guess == SecretNumber)
 	{
 		const FString PlayerName =
 			GuessingController->PlayerState
 			? GuessingController->PlayerState->GetPlayerName()
-			: TEXT("플레이어");
+			: TEXT("Player");
 
 		FinishGame(
 			FString::Printf(
-				TEXT("%s 승리! 정답: %s"),
+				TEXT("%s wins! The answer was %s."),
 				*PlayerName,
 				*SecretNumber
 			)
@@ -210,8 +208,8 @@ void ANBGameMode::ProcessGuess(
 		return;
 	}
 
-	// 모든 플레이어가 기회를 소진했는지 확인
-	AGameStateBase* CurrentGameState = GetGameState();
+	// Check whether all players have used all their attempts
+	AGameStateBase* CurrentGameState = GameState;
 
 	if (!CurrentGameState)
 	{
@@ -242,11 +240,11 @@ void ANBGameMode::ProcessGuess(
 		}
 	}
 
-	if (ValidPlayerCount > 0 && bAllPlayersExhausted)
+	if (ValidPlayerCount >= 2 && bAllPlayersExhausted)
 	{
 		FinishGame(
 			FString::Printf(
-				TEXT("무승부! 정답은 %s 입니다."),
+				TEXT("Draw! The answer was %s."),
 				*SecretNumber
 			)
 		);
@@ -257,7 +255,7 @@ void ANBGameMode::BroadcastResultToAll(
 	const FString& Result
 )
 {
-	AGameStateBase* CurrentGameState = GetGameState();
+	AGameStateBase* CurrentGameState = GameState;
 
 	if (!CurrentGameState)
 	{
@@ -296,7 +294,7 @@ void ANBGameMode::FinishGame(const FString& Result)
 	bGameFinished = true;
 
 	BroadcastResultToAll(
-		Result + TEXT("\n3초 후 게임이 재시작됩니다.")
+		Result + TEXT("\nThe game will restart in 3 seconds.")
 	);
 
 	GetWorldTimerManager().SetTimer(
@@ -310,7 +308,7 @@ void ANBGameMode::FinishGame(const FString& Result)
 
 void ANBGameMode::ResetGame()
 {
-	AGameStateBase* CurrentGameState = GetGameState();
+	AGameStateBase* CurrentGameState = GameState;
 
 	if (CurrentGameState)
 	{
@@ -338,7 +336,7 @@ void ANBGameMode::ResetGame()
 	);
 
 	BroadcastResultToAll(
-		TEXT("새 게임이 시작되었습니다.")
+		TEXT("A new game has started.")
 	);
 }
 

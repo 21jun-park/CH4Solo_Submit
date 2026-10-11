@@ -24,7 +24,8 @@ void ANBPlayerController::ClientReceiveResult_Implementation(
 	UE_LOG(
 		LogTemp,
 		Warning,
-		TEXT("판정 결과: %s"),
+		TEXT("[Controller: %s] 판정 결과: %s"),
+		*GetName(),
 		*Result
 	);
 
