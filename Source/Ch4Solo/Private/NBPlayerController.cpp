@@ -72,5 +72,6 @@ void ANBPlayerController::ClientReceiveChatMessage_Implementation(
     const FString& Message
 )
 {
+    UE_LOG(LogTemp, Warning, TEXT("CHAT RECEIVED: %s"), *Message);
     OnChatMessageReceived.Broadcast(Message);
 }
