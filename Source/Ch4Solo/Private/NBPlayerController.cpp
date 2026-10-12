@@ -74,4 +74,5 @@ void ANBPlayerController::ClientReceiveChatMessage_Implementation(
 {
     UE_LOG(LogTemp, Warning, TEXT("CHAT RECEIVED: %s"), *Message);
     OnChatMessageReceived.Broadcast(Message);
+    UE_LOG(LogTemp, Warning, TEXT("Chat delegate Broadcast called"));
 }
